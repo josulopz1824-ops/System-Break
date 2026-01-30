@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYSTEM BREAK | Kurogane</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="overlay-grano"></div>
+    <div class="vignette"></div>
+
+    <div id="login-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10000; background: rgba(0,0,0,0.95);">
+        <div style="text-align: center; border: 1px solid #8b0000; padding: 40px; background: #050505; box-shadow: 0 0 30px rgba(139, 0, 0, 0.3);">
+            <h1 style="color: #ff0000; letter-spacing: 10px; margin-bottom: 5px; font-family: monospace;">KUROGANE</h1>
+            <p style="color: #666; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 30px; font-family: monospace;">Digital Knowledge Solutions - Entertainment Div.</p>
+            
+            <button id="btn-login-google" style="background: white; color: black; border: none; padding: 12px 25px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 10px; margin: 0 auto; font-family: Arial, sans-serif; transition: 0.3s;">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Color_Icon.svg" width="20">
+                ENTRAR CON GOOGLE
+            </button>
+
+            <p id="guest-access" style="color: #444; font-size: 0.6rem; margin-top: 20px; cursor: pointer; text-decoration: underline; font-family: monospace;">CONTINUAR COMO INVITADO</p>
+        </div>
+    </div>
+
+    <div id="game-container">
+        <header>
+            <div class="brand">KUROGANE ENTERTAINMENT</div>
+            
+            <div id="player-profile-card" class="kurogane-card" style="display: none;">
+                <img id="player-google-img" src="" style="width: 25px; height: 25px; border-radius: 50%; border: 1px solid #ff003c;">
+                <div class="user-info" style="margin-left: 10px;">
+                    <span class="user-name" style="font-size: 10px; color: white;">AGENTE</span>
+                    <span class="xp-text" style="font-size: 8px; color: #ff003c;">D.K.S. VERIFIED</span>
+                </div>
+            </div>
+
+            <button id="btn-abandonar" style="display:none; background:none; border:1px solid #ff003c; color:#ff003c; font-size:9px; cursor:pointer; padding:2px 10px;">[ ABORTAR ENLACE ]</button>
+            <div id="status-display">SISTEMA: ESTABLE</div>
+        </header>
+
+        <div id="lobby-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:black; z-index:100; display:flex; flex-direction:column; justify-content:center; align-items:center; font-family:monospace;">
+            <h1 style="color:#ff003c; letter-spacing:5px; margin-bottom:30px;">KUROGANE ONLINE</h1>
+            
+            <input type="text" id="player-name" placeholder="ID DE AGENTE DKS" style="background:#111; border:1px solid #444; color:white; padding:12px; margin-bottom:25px; text-align:center; width:250px; outline:none;">
+
+            <div style="display:flex; gap:15px; margin-bottom:35px;">
+                <div class="clase-card" onclick="window.seleccionarClase('Hacker', this)">
+                    <b style="color:cyan;">HACKER</b>
+                    <span>+1 ESPACIO EN MANO</span>
+                </div>
+                <div class="clase-card selected" onclick="window.seleccionarClase('Tank', this)">
+                    <b style="color:#ff0033;">TANK</b>
+                    <span>+25 CORDURA EXTRA</span>
+                </div>
+                <div class="clase-card" onclick="window.seleccionarClase('Berserker', this)">
+                    <b style="color:orange;">BERSERKER</b>
+                    <span>+20% DAÑO ATAQUE</span>
+                </div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:12px; width:300px;">
+                <button id="btn-conectar" style="background:#8b0000; color:white; border:none; padding:15px; cursor:pointer; font-family:monospace; font-weight:bold; letter-spacing:2px;">PARTIDA RÁPIDA</button>
+                
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="room-pin" class="pin-input" placeholder="PIN" maxlength="4">
+                    <button id="btn-privada" style="flex:1; background:none; border:1px solid #444; color:white; cursor:pointer; font-size:11px;">CREAR/UNIRSE PRIVADA</button>
+                </div>
+
+                <button id="btn-ver-records" style="background:none; border:1px solid #00f2ff; color:#00f2ff; padding:8px; cursor:pointer; font-size:10px;">[ VER LEADERBOARD ]</button>
+            </div>
+        </div>
+
+        <main id="escena">
+            <div class="player-stats enemy">
+                <div id="enemy-display"></div>
+                <div class="bar-container">
+                    <div id="hp-enemy" class="bar"></div>
+                </div>
+            </div>
+
+            <div id="table-area">
+                <div id="mazo-visual">
+                    <div class="deck-pile"></div>
+                    <div class="deck-pile"></div>
+                    <div class="deck-pile"></div>
+                </div>
+                <div id="center-display">
+                    <div id="carta-en-mesa">
+                        <h1 id="action-text">ESPERANDO JUGADA</h1>
+                    </div>
+                </div>
+            </div>
+
+            <div class="player-stats self">
+                <div id="player-display"></div>
+                <div class="bar-container">
+                    <div id="hp-self" class="bar"></div>
+                </div>
+            </div>
+        </main>
+
+        <footer id="ui-interfaz">
+            <div id="mano"></div>
+            <div id="terminal-log">> Iniciando protocolo DKS...</div>
+            
+            <div id="leaderboard-container">
+                <h3>[ TOP_OPERATIVOS_KUROGANE ]</h3>
+                <div id="leaderboard-list"></div>
+                <button id="btn-cerrar-records">[ CERRAR ]</button>
+            </div>
+
+            <div id="emotes-container">
+                <button onclick="window.enviarEmote('HACKED')">[ HACKED ]</button>
+                <button onclick="window.enviarEmote('GG')">[ GG ]</button>
+                <button onclick="window.enviarEmote('ERROR')">[ ERROR ]</button>
+                <button onclick="window.enviarEmote('L4UGH')">[ L4UGH ]</button>
+            </div>
+        </footer>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>

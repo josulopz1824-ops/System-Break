@@ -1,0 +1,318 @@
+:root {
+    --rojo-sangre: #8b0000;
+    --rojo-neon: #ff0000;
+    --fondo: #050505;
+    --gris-metal: #1a1a1a;
+    --hacker-color: cyan;
+    --tank-color: #ff0033;
+    --berserker-color: orange;
+    --kurogane-neon: #00ff41;
+    --glass-bg: rgba(15, 15, 15, 0.9);
+}
+
+body {
+    background: var(--fondo);
+    color: #eee;
+    font-family: 'Courier New', Courier, monospace;
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    perspective: 1200px; /* Base para la mesa 3D */
+}
+
+/* --- EFECTOS DE PANTALLA (RECUPERADOS) --- */
+.vignette {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: radial-gradient(circle, transparent 40%, black 150%);
+    pointer-events: none; 
+    z-index: 1000;
+}
+
+.overlay-grano {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-image: url("https://www.transparenttextures.com/patterns/stardust.png");
+    opacity: 0.15;
+    pointer-events: none;
+    z-index: 999;
+}
+
+/* --- CONTENEDOR PRINCIPAL --- */
+#game-container {
+    width: 95%;
+    max-width: 1100px;
+    height: 90vh;
+    border: 1px solid #333;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    background: #000;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    transition: all 0.3s ease;
+}
+
+/* --- CORDURA CRÍTICA (RECUPERADO) --- */
+@keyframes criticalBlink {
+    0% { box-shadow: inset 0 0 15px rgba(255, 0, 0, 0.1); border-color: #333; }
+    50% { box-shadow: inset 0 0 50px rgba(255, 0, 0, 0.5); border-color: #ff0000; }
+    100% { box-shadow: inset 0 0 15px rgba(255, 0, 0, 0.1); border-color: #333; }
+}
+.critical-sanity {
+    animation: criticalBlink 1s infinite ease-in-out !important;
+}
+
+header {
+    padding: 10px 20px;
+    border-bottom: 1px solid #333;
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--rojo-sangre);
+    background: #000;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+/* --- ÁREA DE JUEGO & MESA 3D --- */
+#escena {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 20px 0;
+    background: radial-gradient(circle at center, #0a150e 0%, #000 100%);
+    position: relative;
+}
+
+#table-area {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 80px;
+    transform: rotateX(20deg); /* EFECTO MESA ACUDIRA */
+    transform-style: preserve-3d;
+}
+
+/* --- CARTAS (MEJORADAS SIN PERDER LÓGICA) --- */
+.carta {
+    width: 100px;
+    height: 140px;
+    border: 1px solid rgba(0, 255, 65, 0.3);
+    background: var(--glass-bg);
+    cursor: pointer;
+    transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 10px;
+    backdrop-filter: blur(5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+}
+
+.carta:hover {
+    transform: translateY(-20px) scale(1.1) rotateX(-10deg);
+    border-color: var(--kurogane-neon);
+    box-shadow: 0 0 20px rgba(0, 255, 65, 0.4);
+    z-index: 100;
+}
+
+.card-name {
+    font-weight: bold;
+    color: var(--kurogane-neon);
+    font-size: 0.75rem;
+    margin-bottom: 5px;
+    text-shadow: 0 0 5px var(--kurogane-neon);
+}
+
+.card-desc { font-size: 0.65rem; color: #aaa; }
+
+/* --- MAZO 3D (RECUPERADO Y MEJORADO) --- */
+#mazo-visual {
+    position: relative;
+    width: 80px;
+    height: 110px;
+    cursor: pointer;
+    transform-style: preserve-3d;
+}
+.deck-pile {
+    position: absolute;
+    width: 100%; height: 100%;
+    background: #0a1a0f;
+    border: 1px solid #444;
+    border-radius: 2px;
+}
+.deck-pile:nth-child(1) { transform: translateZ(0); }
+.deck-pile:nth-child(2) { transform: translateZ(5px) translate(-4px, -4px); }
+.deck-pile:nth-child(3) { transform: translateZ(10px) translate(-8px, -8px); border-color: var(--kurogane-neon); }
+
+/* --- BARRAS DE VIDA (RECUPERADO) --- */
+.bar-container {
+    width: 250px;
+    height: 10px;
+    background: #111;
+    border: 1px solid #333;
+    overflow: hidden;
+    clip-path: polygon(2% 0, 100% 0, 98% 100%, 0 100%);
+}
+.bar {
+    width: 100%; height: 100%;
+    background: var(--rojo-sangre);
+    transition: width 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+    box-shadow: 0 0 10px var(--rojo-sangre);
+}
+
+/* --- EMOTES TIPO CLASH (RECUPERADO ÍNTEGRO) --- */
+.emote-clash {
+    position: absolute;
+    background: white;
+    color: black;
+    padding: 10px 18px;
+    border-radius: 20px;
+    border: 3px solid #333;
+    font-weight: 900;
+    font-family: 'Arial Black', sans-serif;
+    box-shadow: 0 6px 0px rgba(0,0,0,0.2);
+    z-index: 9999;
+    animation: emotePop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards,
+               emoteFloat 2s ease-in forwards 0.5s;
+}
+@keyframes emotePop {
+    0% { transform: scale(0) rotate(-20deg); opacity: 0; }
+    70% { transform: scale(1.2) rotate(10deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+@keyframes emoteFloat {
+    0% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(-80px); opacity: 0; }
+}
+
+/* --- GLITCH & KO (RECUPERADO ÍNTEGRO) --- */
+.glitch-active {
+    animation: glitch-anim 0.2s infinite;
+    filter: hue-rotate(90deg) contrast(2);
+}
+@keyframes glitch-anim {
+    0% { transform: translate(0); }
+    33% { transform: translate(-4px, 2px); }
+    66% { transform: translate(4px, -2px); }
+    100% { transform: translate(0); }
+}
+
+.ko-screen {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 70px;
+    font-weight: 900;
+    color: #ff003c;
+    text-shadow: 0 0 30px #ff003c;
+    z-index: 10000;
+    letter-spacing: 10px;
+    animation: ko-impact 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+@keyframes ko-impact {
+    0% { transform: translate(-50%, -50%) scale(4); opacity: 0; }
+    100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+/* --- LEADERBOARD & RANGOS (RECUPERADO ÍNTEGRO) --- */
+#leaderboard-container {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 320px;
+    background: rgba(0, 10, 10, 0.98);
+    border: 1px solid var(--hacker-color);
+    padding: 20px;
+    z-index: 2000;
+    color: var(--hacker-color);
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
+    display: none;
+}
+.leaderboard-show { display: block !important; }
+
+.record-entry {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px;
+    border-bottom: 1px solid rgba(0, 255, 255, 0.1);
+}
+.record-entry:nth-child(1) {
+    background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.15), transparent);
+    color: #ffd700;
+    border: 1px solid gold;
+}
+
+/* --- SELECTOR DE CLASES (RECUPERADO) --- */
+.clase-card {
+    border: 1px solid #333;
+    padding: 15px;
+    width: 130px;
+    cursor: pointer;
+    transition: 0.3s;
+    background: #0a0a0a;
+    text-align: center;
+}
+.clase-card.selected { 
+    border-color: var(--rojo-neon); 
+    background: #1a0000; 
+    box-shadow: 0 0 15px var(--rojo-neon);
+}
+
+/* --- MANO & ANIMACIÓN ROBO --- */
+#mano {
+    height: 160px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    padding: 10px;
+    align-items: flex-end;
+}
+@keyframes drawCard {
+    from { transform: translateY(200px) rotate(20deg); opacity: 0; }
+    to { transform: translateY(0) rotate(0); opacity: 1; }
+}
+.draw-animation {
+    animation: drawCard 0.5s ease-out forwards;
+}
+
+/* --- KUROGANE AURA (RECUPERADO) --- */
+.kurogane-aura {
+    background: rgba(20, 20, 20, 0.8);
+    padding: 8px 12px;
+    border-radius: 4px;
+    border-left: 3px solid var(--kurogane-neon);
+    animation: pulse-aura 2s infinite ease-in-out;
+}
+@keyframes pulse-aura {
+    0%, 100% { filter: drop-shadow(0 0 2px rgba(255,255,255,0.1)); }
+    50% { filter: drop-shadow(0 0 10px rgba(255,255,255,0.4)); }
+}
+
+/* SCROLLBAR TERMINAL */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-thumb { background: var(--rojo-sangre); }
+
+/* CARTA QUE SE QUEDA EN EL CENTRO */
+.carta-jugada {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotateX(0deg) scale(1.2) !important;
+    border-color: var(--kurogane-neon) !important;
+    box-shadow: 0 0 30px var(--kurogane-neon) !important;
+    animation: play-impact 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    pointer-events: none; /* Que no estorbe los clicks */
+    z-index: 500;
+}
+
+@keyframes play-impact {
+    0% { transform: translate(-50%, -150%) scale(2); opacity: 0; }
+    100% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+}
