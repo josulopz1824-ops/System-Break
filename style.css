@@ -315,4 +315,41 @@ header {
 @keyframes play-impact {
     0% { transform: translate(-50%, -150%) scale(2); opacity: 0; }
     100% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+
+}
+
+/* --- RESPONSIVE DESIGN --- */
+@media (max-width: 768px) {
+    #game-container {
+        width: 100%;
+        height: 100vh;
+        border: none;
+    }
+
+    #table-area {
+        gap: 20px;
+        flex-direction: column; /* Apila el mazo y la carta jugada */
+        transform: rotateX(10deg); /* Menos inclinación en móvil */
+    }
+
+    .carta {
+        width: 75px; /* Cartas más pequeñas para que quepan en la mano */
+        height: 110px;
+        font-size: 0.6rem;
+    }
+
+    #mano {
+        gap: 5px;
+        padding: 5px;
+        overflow-x: auto; /* Permite deslizar si hay muchas cartas */
+        justify-content: flex-start;
+    }
+
+    .bar-container {
+        width: 150px; /* Barras de vida más cortas */
+    }
+
+    .ko-screen {
+        font-size: 40px;
+    }
 }
