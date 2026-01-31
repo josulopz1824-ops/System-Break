@@ -26,7 +26,7 @@ let salaID = null;
 let miRol = null;
 let claseElegida = "Tank"; 
 let ultimoTimestampEmote = 0; 
-let victoriaRegistrada = false;
+let victoriaRegistrada = false; // Bloqueo local para evitar bucles
 let esSalaPrivada = false; 
 let currentUser = null; 
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -42,18 +42,54 @@ const state = {
     miXP: 0
 };
 
+// --- COLORES POR TIPO ---
+const COLORES_TIPO = {
+    damage: '#ff4444', heal: '#44ff44', shield: '#ffffff', 
+    drain: '#bb00ff', risky: '#ff8800', kill: '#ff0055', 
+    emp: '#00ffff', 'insta-kill': '#ffd700'
+};
+
+// --- MAZO EXPANDIDO (21 CARTAS) ---
 const mazo = [
-    { id: 'tkb', nombre: 'TK-BIO', descripcion: 'Pulso electromagnético. -20 daño.', power: 20, tipo: 'damage' },
-    { id: 'fln', nombre: 'FALLA NEURONAL', descripcion: 'Ataque mental rápido. -15 daño.', power: 15, tipo: 'damage' },
-    { id: 'vml', nombre: 'VASO MEDIO LLENO', descripcion: 'Restaura 25 de estabilidad.', power: 25, tipo: 'heal' },
-    { id: 'shd', nombre: 'ESCUDO FW', descripcion: 'Próximo ataque recibido se reduce a 0.', power: 0, tipo: 'shield' },
-    { id: 'vrs', nombre: 'VIRUS.EXE', descripcion: 'El oponente pierde 5 HP cada turno (3 turnos).', power: 5, tipo: 'virus' },
-    { id: 'drn', nombre: 'DRENAJE', descripcion: 'Roba 15 HP al enemigo y te los da.', power: 15, tipo: 'drain' },
-    { id: 'ovr', nombre: 'OVERCLOCK', descripcion: 'Daño masivo 45, pero pierdes 15 HP.', power: 45, tipo: 'risky' },
-    { id: 'ydb', nombre: 'EXECUTE', descripcion: 'Insta-kill si el rival tiene <40 HP.', power: 100, tipo: 'kill' }
+    { id: 'tkb', nombre: 'TK-BIO', power: 20, tipo: 'damage', desc: 'Pulso EM.' },
+    { id: 'fln', nombre: 'FALLA NEURONAL', power: 15, tipo: 'damage', desc: 'Ataque mental.' },
+    { id: 'vml', nombre: 'VASO MEDIO LLENO', power: 25, tipo: 'heal', desc: 'Estabilidad.' },
+    { id: 'shd', nombre: 'ESCUDO FW', power: 0, tipo: 'shield', desc: 'Bloqueo total.' },
+    { id: 'vrs', nombre: 'VIRUS.EXE', power: 30, tipo: 'damage', desc: 'Corrupción.' },
+    { id: 'drn', nombre: 'DRENAJE', power: 15, tipo: 'drain', desc: 'Roba energía.' },
+    { id: 'ovr', nombre: 'OVERCLOCK', power: 45, tipo: 'risky', desc: 'Daño crítico.' },
+    { id: 'ydb', nombre: 'EXECUTE', power: 100, tipo: 'kill', desc: 'You Ded Bro.' },
+    { id: 'emp', nombre: 'PULSO EMP', power: 10, tipo: 'emp', desc: 'Anula escudos.' },
+    { id: 'rcy', nombre: 'RECYCLE', power: 10, tipo: 'heal', desc: 'Optimización.' },
+    { id: 'ptc', nombre: 'PATCH-7', power: 35, tipo: 'heal', desc: 'Reparación sector.' },
+    { id: 'slayer', nombre: 'SLAYER.EXE', power: 30, tipo: 'damage', desc: 'Subrutina agresiva.' },
+    { id: 'ghost', nombre: 'GHOST CODE', power: 0, tipo: 'shield', desc: 'Intangibilidad.' },
+    { id: 'nova', nombre: 'SUPERNOVA', power: 50, tipo: 'damage', desc: 'Explosión datos.' },
+    { id: 'reboot', nombre: 'REBOOT', power: 15, tipo: 'heal', desc: 'Reinicia defensas.' },
+    { id: 'spike', nombre: 'DATA SPIKE', power: 25, tipo: 'damage', desc: 'Pico tensión.' },
+    { id: 'zero', nombre: 'PUNTO CERO', power: 0, tipo: 'emp', desc: 'Reseteo buffers.' },
+    { id: 'void', nombre: 'VOID BOMB', power: 35, tipo: 'risky', desc: 'Daño/Aturdir.' },
+    { id: 'leech', nombre: 'LEECH IT', power: 20, tipo: 'drain', desc: 'Parásito.' },
+    { id: 'mirror', nombre: 'MIRROR', power: 10, tipo: 'damage', desc: 'Reflejo menor.' },
+    { id: 'org', nombre: 'ORIGEN', power: 999, tipo: 'insta-kill', desc: 'BORRADO TOTAL.' }
 ];
 
-// --- AUTENTICACIÓN (CORREGIDA) ---
+async function bootSequenceDKS() {
+    const log = document.getElementById('terminal-log');
+    if (!log) return;
+    for (let i = 0; i <= 100; i++) {
+        const line = document.createElement('p');
+        line.style.fontSize = "10px";
+        line.style.color = "#00ff41";
+        line.innerText = `> [DKS_CORE] LOADING SECTOR 0x${Math.random().toString(16).slice(2,8).toUpperCase()}... ${i}%`;
+        log.appendChild(line);
+        log.scrollTop = log.scrollHeight;
+        if (i % 10 === 0) await new Promise(r => setTimeout(r, 40));
+    }
+    setTimeout(() => document.getElementById('loading-screen').style.display = 'none', 1000);
+}
+
+// --- AUTENTICACIÓN ---
 onAuthStateChanged(auth, (user) => {
     const loginOverlay = document.getElementById('login-overlay');
     const nameInput = document.getElementById('player-name');
@@ -234,33 +270,54 @@ function robarCartaDelMazo() {
 function crearCartaEnMano() {
     const mano = document.getElementById('mano');
     if(!mano) return;
-    const randomCard = mazo[Math.floor(Math.random() * mazo.length)];
+
+    // --- LÓGICA DE PROBABILIDAD (2 de 40) ---
+    let randomCard;
+    let chance = Math.floor(Math.random() * 30);
+    if (chance < 2) {
+        randomCard = mazo.find(c => c.id === 'org'); // ORIGEN
+    } else {
+        const comunes = mazo.filter(c => c.id !== 'org');
+        randomCard = comunes[Math.floor(Math.random() * comunes.length)];
+    }
+
     const cardDiv = document.createElement('div');
     cardDiv.className = 'carta draw-animation'; 
+    cardDiv.setAttribute('data-tipo', randomCard.tipo); // Para el brillo CSS
     cardDiv.innerHTML = `<div class="card-name">${randomCard.nombre}</div><div class="card-desc">${randomCard.descripcion}</div>`;
     cardDiv.onclick = () => { if (state.turno === miRol) jugarCarta(randomCard, cardDiv); };
     mano.appendChild(cardDiv);
 }
 
 async function jugarCarta(carta, elementoOriginal) {
-
-    const mesa = document.getElementById('table-area');
-const cartaUsada = elementoOriginal.cloneNode(true);
-cartaUsada.classList.add('carta-jugada');
-cartaUsada.onclick = null; // Quitar el click para que no se vuelva a jugar
-
-// 2. Limpiar cartas viejas del centro (para que no se amontonen)
-const vieja = document.querySelector('.carta-jugada');
-if (vieja) vieja.remove();
-
-// 3. Poner la nueva carta en la mesa
-mesa.appendChild(cartaUsada);
     if (state.turno !== miRol) return;
+
+    // --- RESTRICCIÓN DE "YOU DED BRO" (Límite 3) ---
+    if (carta.id === 'ydb') {
+        if (usosExecute >= 3) {
+            alert("SISTEMA DKS: Límite de ejecuciones alcanzado.");
+            return;
+        }
+        usosExecute++;
+    }
+
     const target = (miRol === 'player1') ? 'player2' : 'player1';
     let powerFinal = (claseElegida === "Berserker" && carta.tipo === 'damage') ? carta.power * 1.2 : carta.power;
     
-    let cambios = { turno: target, ultimaCarta: { nombre: carta.nombre, autor: miRol, tipo: carta.tipo, power: powerFinal } };
+    // --- PREPARAR CAMBIOS PARA FIREBASE (AQUÍ SE REPARA EL UNDEFINED) ---
+    let cambios = { 
+        turno: target, 
+        ultimaCarta: { 
+            nombre: carta.nombre, 
+            desc: carta.desc,      // Enviamos la descripción
+            autor: miRol, 
+            tipo: carta.tipo, 
+            power: powerFinal,
+            color: COLORES_TIPO[carta.tipo] || '#00ff41' // Enviamos el color
+        } 
+    };
 
+    // --- LÓGICA DE EFECTOS ---
     if (carta.tipo === 'damage') cambios[`${target}/cordura`] = Math.max(0, state.corduraEnemigo - powerFinal);
     else if (carta.tipo === 'heal') cambios[`${miRol}/cordura`] = Math.min(state.maxCorduraSelf, state.cordura + carta.power);
     else if (carta.tipo === 'shield') cambios[`${miRol}/escudoActivo`] = true;
@@ -272,8 +329,14 @@ mesa.appendChild(cartaUsada);
         cambios[`${miRol}/cordura`] = Math.max(0, state.cordura - 15);
     } else if (carta.tipo === 'kill') {
         cambios[`${target}/cordura`] = (state.corduraEnemigo <= 40) ? 0 : Math.max(0, state.corduraEnemigo - 10);
+    } else if (carta.tipo === 'emp') {
+        cambios[`${target}/escudoActivo`] = false;
+        cambios[`${target}/cordura`] = Math.max(0, state.corduraEnemigo - 10);
+    } else if (carta.tipo === 'insta-kill') {
+        cambios[`${target}/cordura`] = 0;
     }
 
+    // --- ELIMINAR CARTA FÍSICA Y ACTUALIZAR DB ---
     elementoOriginal.remove();
     await update(ref(db, `salas/${salaID}`), cambios);
 }
@@ -288,7 +351,13 @@ function escucharCambios() {
         const datosYo = (miRol === 'player1') ? p1 : p2;
         const datosRival = (miRol === 'player1') ? p2 : p1;
 
-        if (datosYo.escudoActivo && data.ultimaCarta && data.ultimaCarta.autor !== miRol && ['damage', 'risky', 'drain', 'kill'].includes(data.ultimaCarta.tipo)) {
+        // --- RENDERIZADO DE MESA DUAL ---
+        if (data.ultimaCarta) {
+            renderMesaDual(data.ultimaCarta);
+        }
+
+        // Lógica de Escudo
+        if (datosYo.escudoActivo && data.ultimaCarta && data.ultimaCarta.autor !== miRol && ['damage', 'risky', 'drain', 'kill', 'insta-kill'].includes(data.ultimaCarta.tipo)) {
             await update(ref(db, `salas/${salaID}/${miRol}`), { escudoActivo: false, cordura: state.cordura });
             return; 
         }
@@ -302,6 +371,21 @@ function escucharCambios() {
             state.maxCorduraEnemy = datosRival.maxCordura || 100;
         }
 
+        // --- LÓGICA DE VICTORIA SEGURA (SOLUCIONA EL BUG) ---
+        if (state.corduraEnemigo <= 0 && !data.victoriaReclamada && !victoriaRegistrada) {
+            victoriaRegistrada = true;
+            // Marcamos la sala como finalizada en Firebase inmediatamente
+            await update(ref(db, `salas/${salaID}`), { victoriaReclamada: true, estado: 'finalizado' });
+            
+            registrarVictoria(); // Función que suma XP/Victorias al perfil
+            mostrarKO("SISTEMA ENEMIGO NEUTRALIZADO");
+        } 
+        else if (state.cordura <= 0 && !victoriaRegistrada) {
+            victoriaRegistrada = true;
+            mostrarKO("TU NÚCLEO HA SIDO BORRADO");
+        }
+
+        // Efecto visual de daño
         if (state.cordura < corduraAnterior) {
             const container = document.getElementById('game-container');
             container?.classList.add('glitch-active');
@@ -309,6 +393,7 @@ function escucharCambios() {
             setTimeout(() => container?.classList.remove('glitch-active'), 300);
         }
 
+        // Emotes
         if (data.ultimoEmote && data.ultimoEmote.autor !== miRol && data.ultimoEmote.time > ultimoTimestampEmote) {
             ultimoTimestampEmote = data.ultimoEmote.time;
             mostrarEmote(data.ultimoEmote.msg, false);
@@ -316,7 +401,7 @@ function escucharCambios() {
 
         state.turno = data.turno;
         
-        // Actualizar nombres y rangos en tiempo real
+        // Actualizar Rangos DKS
         if (p1) window.actualizarInterfazRango(miRol==='player1'?"player-display":"enemy-display", p1.nombre, p1.xp || 0);
         if (p2) window.actualizarInterfazRango(miRol==='player2'?"player-display":"enemy-display", p2.nombre, p2.xp || 0);
         
@@ -324,11 +409,37 @@ function escucharCambios() {
     });
 }
 
+// --- FUNCIÓN DE APOYO PARA LA MESA (Asegúrate de tenerla) ---
+function renderMesaDual(info) {
+    const mesa = document.getElementById('table-area');
+    if (!mesa) return;
+
+    // Buscamos si ya existe el slot para ese autor, si no, lo creamos
+    let slot = document.getElementById(`slot-${info.autor}`);
+    if (!slot) {
+        slot = document.createElement('div');
+        slot.id = `slot-${info.autor}`;
+        mesa.appendChild(slot);
+    }
+
+    // Aplicamos clase según si soy yo o el rival
+    const esMia = info.autor === miRol;
+    slot.className = `carta-jugada ${esMia ? 'mesa-yo' : 'mesa-rival'}`;
+    
+    // Aplicamos el color del tipo de carta
+    slot.style.borderColor = info.color || '#00ff41';
+    slot.style.boxShadow = `0 0 15px ${info.color || '#00ff41'}`;
+    
+    slot.innerHTML = `
+        <div style="font-size: 9px; opacity: 0.7;">${esMia ? 'TU ACCIÓN' : 'RIVAL'}</div>
+        <div style="color: ${info.color}; font-weight: bold;">${info.nombre}</div>
+    `;
+}
+
 // --- UI Y TABLAS ---
 function updateUI() {
     const actionText = document.getElementById('action-text');
     const container = document.getElementById('game-container');
-    
     const hpSelf = document.getElementById('hp-self');
     const hpEnemy = document.getElementById('hp-enemy');
     const deckCnt = document.getElementById('deck-count');
@@ -433,15 +544,15 @@ function mostrarEmote(msg, esMio) {
     setTimeout(() => popup.remove(), 2500);
 }
 
-// --- RANGOS Y UI (RECUPERADOS) ---
+// --- RANGOS Y UI ---
 const RANGOS_SISTEMA = [
-    { nombre: "Recluta",     minXP: 0,    icono: "🔰", colorAura: "#808080" },
-    { nombre: "Hacker",      minXP: 500,  icono: "💻", colorAura: "#00ff41" },
+    { nombre: "Recluta", minXP: 0, icono: "🔰", colorAura: "#808080" },
+    { nombre: "Hacker", minXP: 500, icono: "💻", colorAura: "#00ff41" },
     { nombre: "Script Kiddie", minXP: 1200, icono: "⚠️", colorAura: "#ffae00" },
-    { nombre: "Espectro",    minXP: 2200, icono: "👁️", colorAura: "#00ffff" },
-    { nombre: "Titán",       minXP: 3500, icono: "🔯", colorAura: "#ff00ff" },
+    { nombre: "Espectro", minXP: 2200, icono: "👁️", colorAura: "#00ffff" },
+    { nombre: "Titán", minXP: 3500, icono: "🔯", colorAura: "#ff00ff" },
     { nombre: "Omnipotente", minXP: 5000, icono: "🌌", colorAura: "#ff0000" },
-    { nombre: "Humilde",     minXP: 7500, icono: "💀", colorAura: "#ffffff" }
+    { nombre: "Humilde", minXP: 7500, icono: "💀", colorAura: "#ffffff" }
 ];
 
 function obtenerDatosRango(xpActual) {
