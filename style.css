@@ -95,6 +95,8 @@ header {
     gap: 80px;
     transform: rotateX(20deg); /* EFECTO MESA ACUDIRA */
     transform-style: preserve-3d;
+    height: 300px;
+    position: relative;
 }
 
 /* --- CARTAS (MEJORADAS SIN PERDER LÓGICA) --- */
@@ -302,54 +304,39 @@ header {
 /* CARTA QUE SE QUEDA EN EL CENTRO */
 .carta-jugada {
     position: absolute;
+    width: 100px;
+    height: 140px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 10px;
+    background: var(--glass-bg);
+    border-radius: 5px;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%) rotateX(0deg) scale(1.2) !important;
-    border-color: var(--kurogane-neon) !important;
-    box-shadow: 0 0 30px var(--kurogane-neon) !important;
+    transform-origin: center center;
+    border: 1px solid var(--kurogane-neon);
+    box-shadow: 0 0 30px var(--kurogane-neon);
     animation: play-impact 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-    pointer-events: none; /* Que no estorbe los clicks */
+    pointer-events: none; 
     z-index: 500;
 }
 
 @keyframes play-impact {
-    0% { transform: translate(-50%, -150%) scale(2); opacity: 0; }
-    100% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
-
+    0% { opacity: 0; transform: translate(-50%, -150%) scale(2); }
+    100% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
 }
 
-/* --- RESPONSIVE DESIGN --- */
-@media (max-width: 768px) {
-    #game-container {
-        width: 100%;
-        height: 100vh;
-        border: none;
-    }
-
-    #table-area {
-        gap: 20px;
-        flex-direction: column; /* Apila el mazo y la carta jugada */
-        transform: rotateX(10deg); /* Menos inclinación en móvil */
-    }
-
-    .carta {
-        width: 75px; /* Cartas más pequeñas para que quepan en la mano */
-        height: 110px;
-        font-size: 0.6rem;
-    }
-
-    #mano {
-        gap: 5px;
-        padding: 5px;
-        overflow-x: auto; /* Permite deslizar si hay muchas cartas */
-        justify-content: flex-start;
-    }
-
-    .bar-container {
-        width: 150px; /* Barras de vida más cortas */
-    }
-
-    .ko-screen {
-        font-size: 40px;
-    }
+/* --- AJUSTES DE MESA DUAL --- */
+.pos-yo { 
+    left: 40% !important; 
+    transform: translate(-50%, -50%) rotate(-5deg) scale(1.2) !important; 
 }
+.pos-rival { 
+    left: 60% !important; 
+    transform: translate(-50%, -50%) rotate(5deg) scale(1.2) !important; 
+}
+
+.carta-jugada { transition: all 0.3s ease-out; position: absolute; }
