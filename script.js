@@ -71,7 +71,7 @@ const mazo = [
     { id: 'void', nombre: 'VOID BOMB', power: 35, tipo: 'risky', desc: 'Daño/Aturdir.' },
     { id: 'leech', nombre: 'LEECH IT', power: 20, tipo: 'drain', desc: 'Parásito.' },
     { id: 'mirror', nombre: 'MIRROR', power: 10, tipo: 'damage', desc: 'Reflejo menor.' },
-    { id: 'org', nombre: 'You Ded Bro', power: 45, tipo: 'insta-kill', desc: 'BORRADO TOTAL.' }
+    { id: 'org', nombre: 'You Ded Bro', power: 5, tipo: 'insta-kill', desc: 'BORRADO TOTAL.' }
 ];
 
 async function bootSequenceDKS() {
@@ -646,5 +646,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (lb) lb.classList.remove('leaderboard-show');
     });
 });
+
 
 
