@@ -71,7 +71,7 @@ const mazo = [
     { id: 'void', nombre: 'VOID BOMB', power: 35, tipo: 'risky', desc: 'Daño/Aturdir.' },
     { id: 'leech', nombre: 'LEECH IT', power: 20, tipo: 'drain', desc: 'Parásito.' },
     { id: 'mirror', nombre: 'MIRROR', power: 10, tipo: 'damage', desc: 'Reflejo menor.' },
-    { id: 'org', nombre: 'ORIGEN', power: 999, tipo: 'insta-kill', desc: 'BORRADO TOTAL.' }
+    { id: 'org', nombre: 'You Ded Bro', power: 45, tipo: 'insta-kill', desc: 'BORRADO TOTAL.' }
 ];
 
 async function bootSequenceDKS() {
@@ -273,7 +273,7 @@ function crearCartaEnMano() {
 
     // --- LÓGICA DE PROBABILIDAD (2 de 40) ---
     let randomCard;
-    let chance = Math.floor(Math.random() * 30);
+    let chance = Math.floor(Math.random() * 5);
     if (chance < 2) {
         randomCard = mazo.find(c => c.id === 'org'); // ORIGEN
     } else {
@@ -294,7 +294,7 @@ async function jugarCarta(carta, elementoOriginal) {
 
     // --- RESTRICCIÓN DE "YOU DED BRO" (Límite 3) ---
     if (carta.id === 'ydb') {
-        if (usosExecute >= 3) {
+        if (usosExecute >= 2) {
             alert("SISTEMA DKS: Límite de ejecuciones alcanzado.");
             return;
         }
@@ -646,3 +646,4 @@ document.addEventListener('DOMContentLoaded', () => {
         if (lb) lb.classList.remove('leaderboard-show');
     });
 });
+
