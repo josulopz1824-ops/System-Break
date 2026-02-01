@@ -273,7 +273,7 @@ function crearCartaEnMano() {
 
     // --- LÓGICA DE PROBABILIDAD (2 de 40) ---
     let randomCard;
-    let chance = Math.floor(Math.random() * 5);
+    let chance = Math.floor(Math.random() * 50);
     if (chance < 2) {
         randomCard = mazo.find(c => c.id === 'org'); // ORIGEN
     } else {
@@ -294,7 +294,7 @@ async function jugarCarta(carta, elementoOriginal) {
 
     // --- RESTRICCIÓN DE "YOU DED BRO" (Límite 3) ---
     if (carta.id === 'ydb') {
-        if (usosExecute >= 2) {
+        if (usosExecute >= 1) {
             alert("SISTEMA DKS: Límite de ejecuciones alcanzado.");
             return;
         }
@@ -646,4 +646,5 @@ document.addEventListener('DOMContentLoaded', () => {
         if (lb) lb.classList.remove('leaderboard-show');
     });
 });
+
 
